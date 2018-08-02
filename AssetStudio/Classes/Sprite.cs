@@ -18,7 +18,7 @@ namespace AssetStudio
         public RectangleF textureRect;
         public PointF[][] m_PhysicsShape;
 
-        public Sprite(AssetPreloadData preloadData, bool readSwitch)
+        public Sprite(AssetPreloadData preloadData, bool readSwitch, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
@@ -66,16 +66,16 @@ namespace AssetStudio
                     }
 
                     //PPtr<SpriteAtlas> m_SpriteAtlas
-                    m_SpriteAtlas = sourceFile.ReadPPtr();
+                    m_SpriteAtlas = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 }
 
                 //SpriteRenderData m_RD
                 //  PPtr<Texture2D> texture
-                texture = sourceFile.ReadPPtr();
+                texture = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 //  PPtr<Texture2D> alphaTexture
                 if (version[0] >= 5) //5.0 and up
                 {
-                    var alphaTexture = sourceFile.ReadPPtr();
+                    var alphaTexture = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 }
 
                 if (version[0] > 5 || (version[0] == 5 && version[1] >= 6)) //5.6 and up
@@ -181,7 +181,7 @@ namespace AssetStudio
             }
             else
             {
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
             }
         }
     }

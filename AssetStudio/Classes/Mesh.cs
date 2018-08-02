@@ -480,7 +480,7 @@ namespace AssetStudio
             }
         }
 
-        public Mesh(AssetPreloadData preloadData, bool readSwitch)
+        public Mesh(AssetPreloadData preloadData, bool readSwitch, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var version = preloadData.sourceFile.version;
             reader = preloadData.InitReader();
@@ -491,8 +491,8 @@ namespace AssetStudio
             if (preloadData.sourceFile.platform == -2)
             {
                 uint m_ObjectHideFlags = reader.ReadUInt32();
-                PPtr m_PrefabParentObject = preloadData.sourceFile.ReadPPtr();
-                PPtr m_PrefabInternal = preloadData.sourceFile.ReadPPtr();
+                PPtr m_PrefabParentObject = preloadData.sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
+                PPtr m_PrefabInternal = preloadData.sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
 
             m_Name = reader.ReadAlignedString();
@@ -1480,7 +1480,7 @@ namespace AssetStudio
             else
             {
                 preloadData.extension = ".obj";
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
             }
         }
     }

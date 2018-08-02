@@ -24,7 +24,7 @@ namespace AssetStudio
 
         public List<ContainerData> m_Container = new List<ContainerData>();
 
-        public AssetBundle(AssetPreloadData preloadData)
+        public AssetBundle(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
@@ -33,7 +33,7 @@ namespace AssetStudio
             var size = reader.ReadInt32();
             for (int i = 0; i < size; i++)
             {
-                sourceFile.ReadPPtr();
+                sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
             size = reader.ReadInt32();
             for (int i = 0; i < size; i++)
@@ -43,7 +43,7 @@ namespace AssetStudio
                 temp.second = new AssetInfo();
                 temp.second.preloadIndex = reader.ReadInt32();
                 temp.second.preloadSize = reader.ReadInt32();
-                temp.second.asset = sourceFile.ReadPPtr();
+                temp.second.asset = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 m_Container.Add(temp);
             }
         }

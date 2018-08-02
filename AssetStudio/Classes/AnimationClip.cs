@@ -170,14 +170,14 @@ namespace AssetStudio
         public PPtr script { get; set; }
 
 
-        public FloatCurve(AssetPreloadData preloadData)
+        public FloatCurve(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var reader = preloadData.sourceFile.reader;
             curve = new AnimationCurve<float>(reader, reader.ReadSingle, preloadData.sourceFile.version);
             attribute = reader.ReadAlignedString();
             path = reader.ReadAlignedString();
             classID = reader.ReadInt32();
-            script = preloadData.sourceFile.ReadPPtr();
+            script = preloadData.sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
         }
     }
 
@@ -187,11 +187,11 @@ namespace AssetStudio
         public PPtr value { get; set; }
 
 
-        public PPtrKeyframe(AssetPreloadData preloadData)
+        public PPtrKeyframe(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var reader = preloadData.sourceFile.reader;
             time = reader.ReadSingle();
-            value = preloadData.sourceFile.ReadPPtr();
+            value = preloadData.sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
         }
     }
 
@@ -204,7 +204,7 @@ namespace AssetStudio
         public PPtr script { get; set; }
 
 
-        public PPtrCurve(AssetPreloadData preloadData)
+        public PPtrCurve(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var reader = preloadData.sourceFile.reader;
 
@@ -212,13 +212,13 @@ namespace AssetStudio
             curve = new List<PPtrKeyframe>(numCurves);
             for (int i = 0; i < numCurves; i++)
             {
-                curve.Add(new PPtrKeyframe(preloadData));
+                curve.Add(new PPtrKeyframe(preloadData, sharedFileIndex, assetsfileList));
             }
 
             attribute = reader.ReadAlignedString();
             path = reader.ReadAlignedString();
             classID = reader.ReadInt32();
-            script = preloadData.sourceFile.ReadPPtr();
+            script = preloadData.sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
         }
     }
 
@@ -584,13 +584,13 @@ namespace AssetStudio
         public byte customType { get; set; }
         public byte isPPtrCurve { get; set; }
 
-        public GenericBinding(AssetPreloadData preloadData)
+        public GenericBinding(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var reader = preloadData.sourceFile.reader;
             var version = preloadData.sourceFile.version;
             path = reader.ReadUInt32();
             attribute = reader.ReadUInt32();
-            script = preloadData.sourceFile.ReadPPtr();
+            script = preloadData.sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             if (version[0] > 5 || (version[0] == 5 && version[1] >= 6)) //5.6 and up
             {
                 typeID = reader.ReadInt32();
@@ -610,21 +610,21 @@ namespace AssetStudio
         public List<GenericBinding> genericBindings { get; set; }
         public List<PPtr> pptrCurveMapping { get; set; }
 
-        public AnimationClipBindingConstant(AssetPreloadData preloadData)
+        public AnimationClipBindingConstant(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var reader = preloadData.sourceFile.reader;
             int numBindings = reader.ReadInt32();
             genericBindings = new List<GenericBinding>(numBindings);
             for (int i = 0; i < numBindings; i++)
             {
-                genericBindings.Add(new GenericBinding(preloadData));
+                genericBindings.Add(new GenericBinding(preloadData, sharedFileIndex, assetsfileList));
             }
 
             int numMappings = reader.ReadInt32();
             pptrCurveMapping = new List<PPtr>(numMappings);
             for (int i = 0; i < numMappings; i++)
             {
-                pptrCurveMapping.Add(preloadData.sourceFile.ReadPPtr());
+                pptrCurveMapping.Add(preloadData.sourceFile.ReadPPtr(sharedFileIndex, assetsfileList));
             }
         }
 
@@ -667,7 +667,7 @@ namespace AssetStudio
         //public List<AnimationEvent> m_Events { get; set; }
 
 
-        public AnimationClip(AssetPreloadData preloadData)
+        public AnimationClip(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var version = sourceFile.version;
@@ -737,7 +737,7 @@ namespace AssetStudio
             m_FloatCurves = new List<FloatCurve>(numFCurves);
             for (int i = 0; i < numFCurves; i++)
             {
-                m_FloatCurves.Add(new FloatCurve(preloadData));
+                m_FloatCurves.Add(new FloatCurve(preloadData, sharedFileIndex, assetsfileList));
             }
 
             if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
@@ -746,7 +746,7 @@ namespace AssetStudio
                 m_PPtrCurves = new List<PPtrCurve>(numPtrCurves);
                 for (int i = 0; i < numPtrCurves; i++)
                 {
-                    m_PPtrCurves.Add(new PPtrCurve(preloadData));
+                    m_PPtrCurves.Add(new PPtrCurve(preloadData, sharedFileIndex, assetsfileList));
                 }
             }
 
@@ -763,7 +763,7 @@ namespace AssetStudio
             }
             if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
             {
-                m_ClipBindingConstant = new AnimationClipBindingConstant(preloadData);
+                m_ClipBindingConstant = new AnimationClipBindingConstant(preloadData, sharedFileIndex, assetsfileList);
             }
             /*int numEvents = reader.ReadInt32();
             m_Events = new List<AnimationEvent>(numEvents);

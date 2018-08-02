@@ -10,7 +10,7 @@ namespace AssetStudio
         public string m_Name;
         public byte[] m_MovieData;
 
-        public MovieTexture(AssetPreloadData preloadData, bool readSwitch)
+        public MovieTexture(AssetPreloadData preloadData, bool readSwitch, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
@@ -21,7 +21,7 @@ namespace AssetStudio
                 var m_Loop = reader.ReadBoolean();
                 reader.AlignStream(4);
                 //PPtr<AudioClip>
-                sourceFile.ReadPPtr();
+                sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 var size = reader.ReadInt32();
                 m_MovieData = reader.ReadBytes(size);
                 var m_ColorSpace = reader.ReadInt32();
@@ -29,7 +29,7 @@ namespace AssetStudio
             else
             {
                 preloadData.extension = ".ogv";
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
             }
         }
     }

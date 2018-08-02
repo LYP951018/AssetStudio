@@ -9,15 +9,15 @@ namespace AssetStudio
     {
         public string serializedText;
 
-        public MonoBehaviour(AssetPreloadData preloadData, bool readSwitch)
+        public MonoBehaviour(AssetPreloadData preloadData, bool readSwitch, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
 
-            var m_GameObject = sourceFile.ReadPPtr();
+            var m_GameObject = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             var m_Enabled = reader.ReadByte();
             reader.AlignStream(4);
-            var m_Script = sourceFile.ReadPPtr();
+            var m_Script = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             var m_Name = reader.ReadAlignedString();
             if (readSwitch)
             {
@@ -37,7 +37,7 @@ namespace AssetStudio
             else
             {
                 preloadData.extension = ".txt";
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
             }
         }
     }

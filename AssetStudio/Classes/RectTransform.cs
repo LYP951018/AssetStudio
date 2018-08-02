@@ -9,9 +9,9 @@ namespace AssetStudio
     {
         public Transform m_Transform;
 
-        public RectTransform(AssetPreloadData preloadData)
+        public RectTransform(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
-            m_Transform = new Transform(preloadData);
+            m_Transform = new Transform(preloadData, sharedFileIndex, assetsfileList);
 
             //var sourceFile = preloadData.sourceFile;
             //var a_Stream = preloadData.sourceFile.a_Stream;

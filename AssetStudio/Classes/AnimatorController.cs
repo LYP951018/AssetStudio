@@ -531,7 +531,7 @@ namespace AssetStudio
         public string m_Name;
         public PPtr[] m_AnimationClips;
 
-        public AnimatorController(AssetPreloadData preloadData)
+        public AnimatorController(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var version = preloadData.sourceFile.version;
@@ -553,7 +553,7 @@ namespace AssetStudio
             m_AnimationClips = new PPtr[numClips];
             for (int i = 0; i < numClips; i++)
             {
-                m_AnimationClips[i] = sourceFile.ReadPPtr();
+                m_AnimationClips[i] = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
         }
     }

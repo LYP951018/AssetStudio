@@ -2,16 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
+
 
 namespace AssetStudio
 {
-    public class GOHierarchy : TreeView
+    public class GOHierarchy
     {
-        protected override void WndProc(ref Message m)
-        {
-            // Filter WM_LBUTTONDBLCLK
-            if (m.Msg != 0x203) base.WndProc(ref m);
-        }
+        
     }
 }

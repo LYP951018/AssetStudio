@@ -14,21 +14,21 @@ namespace AssetStudio
         public List<PPtr> m_Children = new List<PPtr>();
         public PPtr m_Father = new PPtr();//can be transform or type 224 (as seen in Minions)
 
-        public Transform(AssetPreloadData preloadData)
+        public Transform(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
 
-            m_GameObject = sourceFile.ReadPPtr();
+            m_GameObject = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             m_LocalRotation = new[] { reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle() };
             m_LocalPosition = new[] { reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle() };
             m_LocalScale = new[] { reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle() };
             int m_ChildrenCount = reader.ReadInt32();
             for (int j = 0; j < m_ChildrenCount; j++)
             {
-                m_Children.Add(sourceFile.ReadPPtr());
+                m_Children.Add(sourceFile.ReadPPtr(sharedFileIndex, assetsfileList));
             }
-            m_Father = sourceFile.ReadPPtr();
+            m_Father = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
         }
     }
 }

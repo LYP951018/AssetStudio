@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace AssetStudio
 {
-    public class ClassStruct : ListViewItem
+    public class ClassStruct
     {
         public int ID;
         public List<ClassMember> members;
+        public string Text { get; set; }
+        public List<string> SubItems { get; set; } = new List<string>();
 
         public override string ToString()
         {

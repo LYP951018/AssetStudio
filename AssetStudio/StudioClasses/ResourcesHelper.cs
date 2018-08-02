@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace AssetStudio
 {
     public static class ResourcesHelper
     {
-        public static byte[] GetData(string path, string sourceFilePath, long offset, int size)
+        public static byte[] GetData(string path, string sourceFilePath, long offset, int size, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             var resourceFileName = Path.GetFileName(path);
             var resourceFilePath = Path.GetDirectoryName(sourceFilePath) + "\\" + resourceFileName;
@@ -31,14 +30,14 @@ namespace AssetStudio
             }
             else
             {
-                if (Studio.resourceFileReaders.TryGetValue(resourceFileName.ToUpper(), out var resourceReader))
+                if (resourceFileReaders.TryGetValue(resourceFileName.ToUpper(), out var resourceReader))
                 {
                     resourceReader.Position = offset;
                     return resourceReader.ReadBytes(size);
                 }
                 else
                 {
-                    MessageBox.Show($"can't find the resource file {resourceFileName}");
+                    //MessageBox.Show($"can't find the resource file {resourceFileName}");
                     return null;
                 }
             }

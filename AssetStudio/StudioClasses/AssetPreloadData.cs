@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace AssetStudio
 {
-    public class AssetPreloadData : ListViewItem
+    public class AssetPreloadData
     {
         public long m_PathID;
         public uint Offset;
@@ -23,6 +22,8 @@ namespace AssetStudio
         public AssetsFile sourceFile;
         public GameObject gameObject;
         public string uniqueID;
+        public string FullName { get; set; }
+        public List<string> SubItems { get; set; } = new List<string>();
 
         public EndianBinaryReader InitReader()
         {

@@ -21,58 +21,59 @@ namespace AssetStudio
         private Avatar avatar;
         private Dictionary<uint, string> morphChannelInfo = new Dictionary<uint, string>();
         private HashSet<AssetPreloadData> animationClipHashSet = new HashSet<AssetPreloadData>();
+        List<AssetsFile> assetsfileList = new List<AssetsFile>();
         private Dictionary<uint, string> bonePathHash = new Dictionary<uint, string>();
 
-        public ModelConverter(GameObject m_GameObject)
+        public ModelConverter(GameObject m_GameObject, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             if (assetsfileList.TryGetPD(m_GameObject.m_Animator, out var m_Animator))
             {
-                var animator = new Animator(m_Animator);
-                InitWithAnimator(animator);
-                CollectAnimationClip(animator);
+                var animator = new Animator(m_Animator, sharedFileIndex, assetsfileList);
+                InitWithAnimator(animator, sharedFileIndex, assetsfileList, resourceFileReaders);
+                CollectAnimationClip(animator, sharedFileIndex, assetsfileList);
             }
             else
-                InitWithGameObject(m_GameObject);
-            ConvertAnimations();
+                InitWithGameObject(m_GameObject, sharedFileIndex, assetsfileList, resourceFileReaders);
+            ConvertAnimations(sharedFileIndex, assetsfileList);
         }
 
-        public ModelConverter(GameObject m_GameObject, List<AssetPreloadData> animationList)
+        public ModelConverter(GameObject m_GameObject, List<AssetPreloadData> animationList, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
-            InitWithGameObject(m_GameObject);
+            InitWithGameObject(m_GameObject, sharedFileIndex, assetsfileList, resourceFileReaders);
             foreach (var assetPreloadData in animationList)
             {
                 animationClipHashSet.Add(assetPreloadData);
             }
-            ConvertAnimations();
+            ConvertAnimations(sharedFileIndex, assetsfileList);
         }
 
-        public ModelConverter(Animator m_Animator)
+        public ModelConverter(Animator m_Animator, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
-            InitWithAnimator(m_Animator);
-            CollectAnimationClip(m_Animator);
-            ConvertAnimations();
+            InitWithAnimator(m_Animator, sharedFileIndex, assetsfileList, resourceFileReaders);
+            CollectAnimationClip(m_Animator, sharedFileIndex, assetsfileList);
+            ConvertAnimations(sharedFileIndex, assetsfileList);
         }
 
-        public ModelConverter(Animator m_Animator, List<AssetPreloadData> animationList)
+        public ModelConverter(Animator m_Animator, List<AssetPreloadData> animationList, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
-            InitWithAnimator(m_Animator);
+            InitWithAnimator(m_Animator, sharedFileIndex, assetsfileList, resourceFileReaders);
             foreach (var assetPreloadData in animationList)
             {
                 animationClipHashSet.Add(assetPreloadData);
             }
-            ConvertAnimations();
+            ConvertAnimations(sharedFileIndex, assetsfileList);
         }
 
-        private void InitWithAnimator(Animator m_Animator)
+        private void InitWithAnimator(Animator m_Animator, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             if (assetsfileList.TryGetPD(m_Animator.m_Avatar, out var m_Avatar))
                 avatar = new Avatar(m_Avatar);
 
             assetsfileList.TryGetGameObject(m_Animator.m_GameObject, out var m_GameObject);
-            InitWithGameObject(m_GameObject);
+            InitWithGameObject(m_GameObject, sharedFileIndex, assetsfileList, resourceFileReaders);
         }
 
-        private void InitWithGameObject(GameObject m_GameObject)
+        private void InitWithGameObject(GameObject m_GameObject, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             assetsfileList.TryGetTransform(m_GameObject.m_Transform, out var m_Transform);
             var rootTransform = m_Transform;
@@ -99,10 +100,10 @@ namespace AssetStudio
             }
 
             CreateBonePathHash(rootTransform);
-            ConvertMeshRenderer(m_Transform);
+            ConvertMeshRenderer(m_Transform, sharedFileIndex, assetsfileList, resourceFileReaders);
         }
 
-        private void ConvertMeshRenderer(Transform m_Transform)
+        private void ConvertMeshRenderer(Transform m_Transform, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             assetsfileList.TryGetGameObject(m_Transform.m_GameObject, out var m_GameObject);
             foreach (var m_Component in m_GameObject.m_Components)
@@ -113,19 +114,19 @@ namespace AssetStudio
                     {
                         case ClassIDReference.MeshRenderer:
                             {
-                                var m_Renderer = new MeshRenderer(assetPreloadData);
-                                ConvertMeshRenderer(m_Renderer);
+                                var m_Renderer = new MeshRenderer(assetPreloadData, sharedFileIndex, assetsfileList);
+                                ConvertMeshRenderer(m_Renderer, sharedFileIndex, assetsfileList, resourceFileReaders);
                                 break;
                             }
                         case ClassIDReference.SkinnedMeshRenderer:
                             {
-                                var m_SkinnedMeshRenderer = new SkinnedMeshRenderer(assetPreloadData);
-                                ConvertMeshRenderer(m_SkinnedMeshRenderer);
+                                var m_SkinnedMeshRenderer = new SkinnedMeshRenderer(assetPreloadData, sharedFileIndex, assetsfileList);
+                                ConvertMeshRenderer(m_SkinnedMeshRenderer, sharedFileIndex, assetsfileList, resourceFileReaders);
                                 break;
                             }
                         case ClassIDReference.Animation:
                             {
-                                var m_Animation = new Animation(assetPreloadData);
+                                var m_Animation = new Animation(assetPreloadData, sharedFileIndex, assetsfileList);
                                 foreach (var animation in m_Animation.m_Animations)
                                 {
                                     if (assetsfileList.TryGetPD(animation, out var animationClip))
@@ -141,20 +142,20 @@ namespace AssetStudio
             foreach (var pptr in m_Transform.m_Children)
             {
                 if (assetsfileList.TryGetTransform(pptr, out var child))
-                    ConvertMeshRenderer(child);
+                    ConvertMeshRenderer(child, sharedFileIndex, assetsfileList, resourceFileReaders);
             }
         }
 
-        private void CollectAnimationClip(Animator m_Animator)
+        private void CollectAnimationClip(Animator m_Animator, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             if (assetsfileList.TryGetPD(m_Animator.m_Controller, out var assetPreloadData))
             {
                 if (assetPreloadData.Type == ClassIDReference.AnimatorOverrideController)
                 {
-                    var m_AnimatorOverrideController = new AnimatorOverrideController(assetPreloadData);
+                    var m_AnimatorOverrideController = new AnimatorOverrideController(assetPreloadData, sharedFileIndex, assetsfileList);
                     if (assetsfileList.TryGetPD(m_AnimatorOverrideController.m_Controller, out assetPreloadData))
                     {
-                        var m_AnimatorController = new AnimatorController(assetPreloadData);
+                        var m_AnimatorController = new AnimatorController(assetPreloadData, sharedFileIndex, assetsfileList);
                         foreach (var m_AnimationClip in m_AnimatorController.m_AnimationClips)
                         {
                             if (assetsfileList.TryGetPD(m_AnimationClip, out assetPreloadData))
@@ -173,7 +174,7 @@ namespace AssetStudio
                 }
                 else if (assetPreloadData.Type == ClassIDReference.AnimatorController)
                 {
-                    var m_AnimatorController = new AnimatorController(assetPreloadData);
+                    var m_AnimatorController = new AnimatorController(assetPreloadData, sharedFileIndex, assetsfileList);
                     foreach (var m_AnimationClip in m_AnimatorController.m_AnimationClips)
                     {
                         if (assetsfileList.TryGetPD(m_AnimationClip, out assetPreloadData))
@@ -218,9 +219,9 @@ namespace AssetStudio
             }
         }
 
-        private void ConvertMeshRenderer(MeshRenderer meshR)
+        private void ConvertMeshRenderer(MeshRenderer meshR, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
-            var mesh = GetMesh(meshR);
+            var mesh = GetMesh(meshR, sharedFileIndex, assetsfileList);
             if (mesh == null)
                 return;
             var iMesh = new ImportedMesh();
@@ -266,10 +267,10 @@ namespace AssetStudio
                 {
                     if (assetsfileList.TryGetPD(meshR.m_Materials[i - firstSubMesh], out var MaterialPD))
                     {
-                        mat = new Material(MaterialPD);
+                        mat = new Material(MaterialPD, sharedFileIndex, assetsfileList);
                     }
                 }
-                ImportedMaterial iMat = ConvertMaterial(mat);
+                ImportedMaterial iMat = ConvertMaterial(mat, resourceFileReaders);
                 iSubmesh.Material = iMat.Name;
                 iSubmesh.VertexList = new List<ImportedVertex>((int)submesh.vertexCount);
                 var vertexColours = mesh.m_Colors != null && (mesh.m_Colors.Length == mesh.m_VertexCount * 3 || mesh.m_Colors.Length == mesh.m_VertexCount * 4);
@@ -496,13 +497,13 @@ namespace AssetStudio
             MeshList.Add(iMesh);
         }
 
-        private Mesh GetMesh(MeshRenderer meshR)
+        private Mesh GetMesh(MeshRenderer meshR, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             if (meshR is SkinnedMeshRenderer sMesh)
             {
                 if (assetsfileList.TryGetPD(sMesh.m_Mesh, out var MeshPD))
                 {
-                    return new Mesh(MeshPD, true);
+                    return new Mesh(MeshPD, true, sharedFileIndex, assetsfileList);
                 }
             }
             else
@@ -514,10 +515,10 @@ namespace AssetStudio
                     {
                         if (assetPreloadData.Type == ClassIDReference.MeshFilter)
                         {
-                            var m_MeshFilter = new MeshFilter(assetPreloadData);
+                            var m_MeshFilter = new MeshFilter(assetPreloadData, sharedFileIndex, assetsfileList);
                             if (assetsfileList.TryGetPD(m_MeshFilter.m_Mesh, out var MeshPD))
                             {
-                                return new Mesh(MeshPD, true);
+                                return new Mesh(MeshPD, true, sharedFileIndex, assetsfileList);
                             }
                         }
                     }
@@ -539,7 +540,7 @@ namespace AssetStudio
             return String.Empty + m_GameObject.m_Name;
         }
 
-        private ImportedMaterial ConvertMaterial(Material mat)
+        private ImportedMaterial ConvertMaterial(Material mat, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             ImportedMaterial iMat;
             if (mat != null)
@@ -597,7 +598,7 @@ namespace AssetStudio
                     Texture2D tex2D = null;
                     if (assetsfileList.TryGetPD(texEnv.m_Texture, out var TexturePD) && TexturePD.Type == ClassIDReference.Texture2D)//TODO other Texture
                     {
-                        tex2D = new Texture2D(TexturePD, true);
+                        tex2D = new Texture2D(TexturePD, true, resourceFileReaders);
                     }
 
                     if (tex2D == null)
@@ -609,7 +610,7 @@ namespace AssetStudio
                     {
                         continue;
                     }
-                    iMat.Textures[dest] = TexturePD.Text + ".png";
+                    iMat.Textures[dest] = TexturePD.FullName + ".png";
                     iMat.TexOffsets[dest] = new Vector2(texEnv.m_Offset[0], texEnv.m_Offset[1]);
                     iMat.TexScales[dest] = new Vector2(texEnv.m_Scale[0], texEnv.m_Scale[1]);
                     ConvertTexture2D(tex2D, iMat.Textures[dest]);
@@ -646,11 +647,11 @@ namespace AssetStudio
             }
         }
 
-        private void ConvertAnimations()
+        private void ConvertAnimations(Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             foreach (var assetPreloadData in animationClipHashSet)
             {
-                var clip = new AnimationClip(assetPreloadData);
+                var clip = new AnimationClip(assetPreloadData, sharedFileIndex, assetsfileList);
                 if (clip.m_Legacy)
                 {
                     var iAnim = new ImportedKeyframedAnimation();

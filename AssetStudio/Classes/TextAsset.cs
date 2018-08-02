@@ -25,7 +25,7 @@ namespace AssetStudio
             else
             {
                 preloadData.extension = ".txt";
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
             }
         }
     }

@@ -13,7 +13,7 @@ namespace AssetStudio
         public List<Guid> guids = new List<Guid>();
 
 
-        public SpriteAtlas(AssetPreloadData preloadData)
+        public SpriteAtlas(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
@@ -24,7 +24,7 @@ namespace AssetStudio
             for (int i = 0; i < size; i++)
             {
                 //PPtr<Sprite> data
-                sourceFile.ReadPPtr();
+                sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
             //vector m_PackedSpriteNamesToIndex
             size = reader.ReadInt32();
@@ -41,9 +41,9 @@ namespace AssetStudio
                 var second = reader.ReadInt64();
                 //SpriteAtlasData second
                 //  PPtr<Texture2D> texture
-                textures.Add(sourceFile.ReadPPtr());
+                textures.Add(sourceFile.ReadPPtr(sharedFileIndex, assetsfileList));
                 // PPtr<Texture2D> alphaTexture
-                var alphaTexture = sourceFile.ReadPPtr();
+                var alphaTexture = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 //  Rectf textureRect
                 textureRects.Add(new RectangleF(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
                 //  Vector2f textureRectOffset

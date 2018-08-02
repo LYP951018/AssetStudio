@@ -10,7 +10,7 @@ namespace AssetStudio
         public string m_Name;
         public byte[] m_FontData;
 
-        public UFont(AssetPreloadData preloadData, bool readSwitch)
+        public UFont(AssetPreloadData preloadData, bool readSwitch, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var version = sourceFile.version;
@@ -23,9 +23,9 @@ namespace AssetStudio
                 if ((version[0] == 5 && version[1] >= 5) || version[0] > 5)//5.5 and up
                 {
                     var m_LineSpacing = reader.ReadSingle();
-                    var m_DefaultMaterial = sourceFile.ReadPPtr();
+                    var m_DefaultMaterial = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                     var m_FontSize = reader.ReadSingle();
-                    var m_Texture = sourceFile.ReadPPtr();
+                    var m_Texture = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                     int m_AsciiStartOffset = reader.ReadInt32();
                     var m_Tracking = reader.ReadSingle();
                     var m_CharacterSpacing = reader.ReadInt32();
@@ -85,7 +85,7 @@ namespace AssetStudio
                     }
 
                     int m_ConvertCase = reader.ReadInt32();
-                    PPtr m_DefaultMaterial = sourceFile.ReadPPtr();
+                    PPtr m_DefaultMaterial = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
 
                     int m_CharacterRects_size = reader.ReadInt32();
                     for (int i = 0; i < m_CharacterRects_size; i++)
@@ -110,7 +110,7 @@ namespace AssetStudio
                         }
                     }
 
-                    PPtr m_Texture = sourceFile.ReadPPtr();
+                    PPtr m_Texture = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
 
                     int m_KerningValues_size = reader.ReadInt32();
                     for (int i = 0; i < m_KerningValues_size; i++)
@@ -145,7 +145,7 @@ namespace AssetStudio
             }
             else
             {
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
             }
         }
     }

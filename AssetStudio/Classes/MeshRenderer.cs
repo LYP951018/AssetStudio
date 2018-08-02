@@ -20,13 +20,13 @@ namespace AssetStudio
 
         protected MeshRenderer() { }
 
-        public MeshRenderer(AssetPreloadData preloadData)
+        public MeshRenderer(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var version = sourceFile.version;
             var reader = preloadData.InitReader();
 
-            m_GameObject = sourceFile.ReadPPtr();
+            m_GameObject = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             if (version[0] < 5)
             {
                 var m_Enabled = reader.ReadBoolean();
@@ -62,7 +62,7 @@ namespace AssetStudio
             m_Materials = new PPtr[reader.ReadInt32()];
             for (int m = 0; m < m_Materials.Length; m++)
             {
-                m_Materials[m] = sourceFile.ReadPPtr();
+                m_Materials[m] = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
 
             if (version[0] < 3)

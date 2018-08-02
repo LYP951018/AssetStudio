@@ -16,7 +16,7 @@ namespace AssetStudio
 
     public static class PPtrHelpers
     {
-        public static PPtr ReadPPtr(this AssetsFile sourceFile)
+        public static PPtr ReadPPtr(this AssetsFile sourceFile, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var result = new PPtr();
             var reader = sourceFile.reader;

@@ -4,44 +4,46 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using static AssetStudio.Studio;
 
 namespace AssetStudio
 {
     static class Importer
     {
-        public static List<string> importFiles = new List<string>(); //files to load
-        public static HashSet<string> importFilesHash = new HashSet<string>(); //to improve the loading speed
-        public static HashSet<string> assetsfileListHash = new HashSet<string>(); //to improve the loading speed
+        public static ThreadLocal<List<string>> importFiles = new ThreadLocal<List<string>>(() => new List<string>()); //files to load
+        public static ThreadLocal<HashSet<string>> importFilesHash = new ThreadLocal<HashSet<string>>(() => new HashSet<string>()); //to improve the loading speed
+        public static ThreadLocal<HashSet<string>> assetsfileListHash = new ThreadLocal<HashSet<string>>(() => new HashSet<string>()); //to improve the loading speed
 
-        public static void LoadFile(string fullName)
+        public static void LoadFile(string fullName, Dictionary<string, EndianBinaryReader> resourceFileReaders,
+            List<AssetsFile> assetsfileList)
         {
             switch (CheckFileType(fullName, out var reader))
             {
                 case FileType.AssetsFile:
-                    LoadAssetsFile(fullName, reader);
+                    LoadAssetsFile(fullName, assetsfileList, reader);
                     break;
                 case FileType.BundleFile:
-                    LoadBundleFile(fullName, reader);
+                    LoadBundleFile(fullName, assetsfileList, reader, resourceFileReaders);
                     break;
                 case FileType.WebFile:
-                    LoadWebFile(fullName, reader);
+                    LoadWebFile(fullName, assetsfileList, resourceFileReaders, reader);
                     break;
             }
         }
 
-        private static void LoadAssetsFile(string fullName, EndianBinaryReader reader, string parentPath = null)
+        private static void LoadAssetsFile(string fullName, List<AssetsFile> assetsfileList, EndianBinaryReader reader, string parentPath = null)
         {
             var fileName = Path.GetFileName(fullName);
             StatusStripUpdate("Loading " + fileName);
-            if (!assetsfileListHash.Contains(fileName.ToUpper()))
+            if (!assetsfileListHash.Value.Contains(fileName.ToUpper()))
             {
                 var assetsFile = new AssetsFile(fullName, reader);
                 if (assetsFile.valid)
                 {
                     assetsFile.parentPath = parentPath;
                     assetsfileList.Add(assetsFile);
-                    assetsfileListHash.Add(assetsFile.upperFileName);
+                    assetsfileListHash.Value.Add(assetsFile.upperFileName);
 
                     #region for 2.6.x find mainData and get string version
                     if (assetsFile.fileGen == 6 && fileName != "mainData")
@@ -69,7 +71,7 @@ namespace AssetStudio
                         var sharedFilePath = Path.GetDirectoryName(fullName) + "\\" + sharedFile.fileName;
                         var sharedFileName = sharedFile.fileName;
 
-                        if (!importFilesHash.Contains(sharedFileName.ToUpper()))
+                        if (!importFilesHash.Value.Contains(sharedFileName.ToUpper()))
                         {
                             if (!File.Exists(sharedFilePath))
                             {
@@ -82,8 +84,8 @@ namespace AssetStudio
 
                             if (File.Exists(sharedFilePath))
                             {
-                                importFiles.Add(sharedFilePath);
-                                importFilesHash.Add(sharedFileName.ToUpper());
+                                importFiles.Value.Add(sharedFilePath);
+                                importFilesHash.Value.Add(sharedFileName.ToUpper());
                                 value++;
                             }
                         }
@@ -96,7 +98,8 @@ namespace AssetStudio
             }
         }
 
-        private static void LoadBundleFile(string fullName, EndianBinaryReader reader, string parentPath = null)
+        private static void LoadBundleFile(string fullName, List<AssetsFile> assetsfileList, 
+            EndianBinaryReader reader, Dictionary<string, EndianBinaryReader> resourceFileReaders, string parentPath = null)
         {
             var fileName = Path.GetFileName(fullName);
             StatusStripUpdate("Decompressing " + fileName);
@@ -104,7 +107,7 @@ namespace AssetStudio
             reader.Dispose();
             foreach (var file in bundleFile.fileList)
             {
-                if (!assetsfileListHash.Contains(file.fileName.ToUpper()))
+                if (!assetsfileListHash.Value.Contains(file.fileName.ToUpper()))
                 {
                     StatusStripUpdate("Loading " + file.fileName);
                     var assetsFile = new AssetsFile(Path.GetDirectoryName(fullName) + "\\" + file.fileName, new EndianBinaryReader(file.stream));
@@ -121,7 +124,7 @@ namespace AssetStudio
                         }
 
                         assetsfileList.Add(assetsFile);
-                        assetsfileListHash.Add(assetsFile.upperFileName);
+                        assetsfileListHash.Value.Add(assetsFile.upperFileName);
                     }
                     else
                     {
@@ -131,7 +134,9 @@ namespace AssetStudio
             }
         }
 
-        private static void LoadWebFile(string fullName, EndianBinaryReader reader)
+        private static void LoadWebFile(string fullName, List<AssetsFile> assetsfileList,
+            Dictionary<string, EndianBinaryReader> resourceFileReaders,
+            EndianBinaryReader reader)
         {
             var fileName = Path.GetFileName(fullName);
             StatusStripUpdate("Loading " + fileName);
@@ -143,13 +148,13 @@ namespace AssetStudio
                 switch (CheckFileType(file.stream, out reader))
                 {
                     case FileType.AssetsFile:
-                        LoadAssetsFile(dummyName, reader, fullName);
+                        LoadAssetsFile(dummyName, assetsfileList, reader, fullName);
                         break;
                     case FileType.BundleFile:
-                        LoadBundleFile(dummyName, reader, fullName);
+                        LoadBundleFile(dummyName, assetsfileList, reader, resourceFileReaders, fullName);
                         break;
                     case FileType.WebFile:
-                        LoadWebFile(dummyName, reader);
+                        LoadWebFile(dummyName, assetsfileList, resourceFileReaders, reader);
                         break;
                 }
                 resourceFileReaders.Add(file.fileName.ToUpper(), reader);

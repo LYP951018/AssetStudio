@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web.Script.Serialization;
+using AssetStudio.StudioClasses;
 using Lz4;
+using Newtonsoft.Json;
 
 namespace AssetStudio
 {
@@ -37,7 +39,7 @@ namespace AssetStudio
                     {
                         reader.Position = preloadData.Offset;
                         var sb = new StringBuilder();
-                        var members = new JavaScriptSerializer().Deserialize<List<ClassMember>>(str);
+                        var members = JsonConvert.DeserializeObject<List<ClassMember>>(str);
                         ClassStructHelper.ReadClassString(sb, members, reader);
                         m_Script = Encoding.UTF8.GetBytes(sb.ToString());
                     }
@@ -63,7 +65,7 @@ namespace AssetStudio
             else
             {
                 preloadData.extension = ".txt";
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
             }
         }
     }

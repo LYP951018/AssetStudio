@@ -11,13 +11,13 @@ namespace AssetStudio
         public PPtr[] m_Bones;
         public List<float> m_BlendShapeWeights;
 
-        public SkinnedMeshRenderer(AssetPreloadData preloadData)
+        public SkinnedMeshRenderer(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var version = sourceFile.version;
             var reader = preloadData.InitReader();
 
-            m_GameObject = sourceFile.ReadPPtr();
+            m_GameObject = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             if (version[0] < 5)
             {
                 var m_Enabled = reader.ReadBoolean();
@@ -53,7 +53,7 @@ namespace AssetStudio
             m_Materials = new PPtr[reader.ReadInt32()];
             for (int m = 0; m < m_Materials.Length; m++)
             {
-                m_Materials[m] = sourceFile.ReadPPtr();
+                m_Materials[m] = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
 
             if (version[0] < 3)
@@ -76,12 +76,12 @@ namespace AssetStudio
                     m_SubsetIndices = reader.ReadUInt32Array(numSubsetIndices);
                 }
 
-                var m_StaticBatchRoot = sourceFile.ReadPPtr();
+                var m_StaticBatchRoot = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
 
                 if ((sourceFile.version[0] == 5 && sourceFile.version[1] >= 4) || sourceFile.version[0] > 5)//5.4.0 and up
                 {
-                    var m_ProbeAnchor = sourceFile.ReadPPtr();
-                    var m_LightProbeVolumeOverride = sourceFile.ReadPPtr();
+                    var m_ProbeAnchor = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
+                    var m_LightProbeVolumeOverride = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 }
                 else if (version[0] >= 4 || (version[0] == 3 && version[1] >= 5))//3.5 - 5.3
                 {
@@ -91,7 +91,7 @@ namespace AssetStudio
                     {
                         int m_ReflectionProbeUsage = reader.ReadInt32();
                     }
-                    var m_LightProbeAnchor = sourceFile.ReadPPtr();
+                    var m_LightProbeAnchor = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
                 }
 
                 if (version[0] >= 5 || (version[0] == 4 && version[1] >= 3))//4.3 and up
@@ -118,15 +118,15 @@ namespace AssetStudio
 
             if (version[0] == 2 && version[1] < 6)//2.6 down
             {
-                var m_DisableAnimationWhenOffscreen = sourceFile.ReadPPtr();
+                var m_DisableAnimationWhenOffscreen = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
 
-            m_Mesh = sourceFile.ReadPPtr();
+            m_Mesh = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
 
             m_Bones = new PPtr[reader.ReadInt32()];
             for (int b = 0; b < m_Bones.Length; b++)
             {
-                m_Bones[b] = sourceFile.ReadPPtr();
+                m_Bones[b] = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
             }
 
             if (version[0] < 3)

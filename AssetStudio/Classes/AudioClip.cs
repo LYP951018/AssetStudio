@@ -34,7 +34,7 @@ namespace AssetStudio
 
         public bool version5;
 
-        public AudioClip(AssetPreloadData preloadData, bool readSwitch)
+        public AudioClip(AssetPreloadData preloadData, bool readSwitch, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
@@ -93,7 +93,7 @@ namespace AssetStudio
             {
                 if (!string.IsNullOrEmpty(m_Source))
                 {
-                    m_AudioData = ResourcesHelper.GetData(m_Source, sourceFile.filePath, m_Offset, (int)m_Size);
+                    m_AudioData = ResourcesHelper.GetData(m_Source, sourceFile.filePath, m_Offset, (int)m_Size, resourceFileReaders);
                 }
                 else
                 {
@@ -215,7 +215,7 @@ namespace AssetStudio
 
                 preloadData.InfoText += "\n3D: " + m_3D;
 
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
                 if (m_Source != null)
                     preloadData.fullSize = preloadData.Size + (int)m_Size;
             }

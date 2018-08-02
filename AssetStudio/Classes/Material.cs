@@ -35,13 +35,13 @@ namespace AssetStudio
         public strFloatPair[] m_Floats;
         public strColorPair[] m_Colors;
 
-        public Material(AssetPreloadData preloadData)
+        public Material(AssetPreloadData preloadData, Dictionary<string, int> sharedFileIndex, List<AssetsFile> assetsfileList)
         {
             var sourceFile = preloadData.sourceFile;
             var reader = preloadData.InitReader();
 
             m_Name = reader.ReadAlignedString();
-            m_Shader = sourceFile.ReadPPtr();
+            m_Shader = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList);
 
             if (sourceFile.version[0] == 4 && (sourceFile.version[1] >= 2 || (sourceFile.version[1] == 1 && sourceFile.buildType[0] != "a")))
             {
@@ -89,7 +89,7 @@ namespace AssetStudio
                 TexEnv m_TexEnv = new TexEnv()
                 {
                     name = reader.ReadAlignedString(),
-                    m_Texture = sourceFile.ReadPPtr(),
+                    m_Texture = sourceFile.ReadPPtr(sharedFileIndex, assetsfileList),
                     m_Scale = new[] { reader.ReadSingle(), reader.ReadSingle() },
                     m_Offset = new[] { reader.ReadSingle(), reader.ReadSingle() }
                 };

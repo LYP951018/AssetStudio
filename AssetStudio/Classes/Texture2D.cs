@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -37,7 +38,7 @@ namespace AssetStudio
         public uint size;
         public string path;
 
-        public Texture2D(AssetPreloadData preloadData, bool readSwitch)
+        public Texture2D(AssetPreloadData preloadData, bool readSwitch, Dictionary<string, EndianBinaryReader> resourceFileReaders)
         {
             this.preloadData = preloadData;
             var sourceFile = preloadData.sourceFile;
@@ -116,7 +117,7 @@ namespace AssetStudio
             {
                 if (!string.IsNullOrEmpty(path))
                 {
-                    image_data = ResourcesHelper.GetData(path, sourceFile.filePath, offset, image_data_size);
+                    image_data = ResourcesHelper.GetData(path, sourceFile.filePath, offset, image_data_size, resourceFileReaders);
                 }
                 else
                 {
@@ -142,7 +143,7 @@ namespace AssetStudio
                     case 1: preloadData.InfoText += "\nWrap mode: Clamp"; break;
                 }
 
-                preloadData.Text = m_Name;
+                preloadData.FullName = m_Name;
                 if (!string.IsNullOrEmpty(path))
                     preloadData.fullSize = preloadData.Size + (int)size;
             }
